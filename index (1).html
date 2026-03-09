@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SF Street Walker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ── REPLACE THESE TWO VALUES ── */
+  /* See README for how to find them in your Supabase project */
+
+  :root {
+    --bg: #0d0d0d;
+    --panel: #141414;
+    --border: #2a2a2a;
+    --gold: #d4a853;
+    --gold-dim: #7a5820;
+    --green: #5adf8a;
+    --text: #e8e3dc;
+    --muted: #666;
+    --unwalked: #2d3d4d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Space Mono', monospace; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+  /* HEADER */
+  #header {
+    display: flex; align-items: center; height: 56px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    flex-shrink: 0; overflow: hidden;
+  }
+
+  #logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+    letter-spacing: 4px; color: var(--gold); padding: 0 20px;
+    border-right: 1px solid var(--border); height: 100%;
+    display: flex; align-items: center; white-space: nowrap;
+    text-shadow: 0 0 28px rgba(212,168,83,0.4);
+  }
+
+  #stats { display: flex; flex: 1; height: 100%; }
+
+  .stat-block {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border-right: 1px solid var(--border); padding: 6px 12px;
+  }
+  .stat-label { font-size: 0.52rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .stat-val { font-size: 1.05rem; font-weight: 700; }
+  .stat-val.g { color: var(--green); }
+  .stat-val.o { color: var(--gold); }
+
+  #progress-wrap { width: 90%; height: 3px; background: #222; border-radius: 2px; margin-top: 3px; overflow: hidden; }
+  #progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); width: 0%; transition: width 0.4s ease; }
+
+  #toolbar { display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 100%; }
+
+  .btn {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 1px; text-transform: uppercase; padding: 6px 12px;
+    border: 1px solid var(--gold-dim); background: transparent;
+    color: var(--gold); cursor: pointer; border-radius: 2px;
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .btn:hover, .btn.active { background: var(--gold); color: #0d0d0d; border-color: var(--gold); }
+  .btn.red { border-color: #5a2020; color: #f87171; }
+  .btn.red:hover { background: #f87171; color: #0d0d0d; border-color: #f87171; }
+
+  /* SYNC INDICATOR */
+  #sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  #sync-dot.syncing { background: var(--gold); animation: pulse 0.8s infinite; }
+  #sync-dot.ok { background: var(--green); }
+  #sync-dot.err { background: #f87171; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  /* MAP */
+  #map-wrap { flex: 1; position: relative; overflow: hidden; }
+  #map { width: 100%; height: 100%; }
+  .leaflet-tile { filter: grayscale(100%) brightness(0.30) contrast(1.5); }
+
+  /* LOADING */
+  #loading {
+    position: absolute; inset: 0; background: rgba(8,8,8,0.96);
+    z-index: 9999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+  }
+  #loading h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 6px; color: var(--gold); }
+  #load-msg { font-size: 0.64rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; max-width: 360px; text-align: center; line-height: 2; }
+  .ring { width: 44px; height: 44px; border: 3px solid #222; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.75s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #load-bar-wrap { width: 260px; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+  #load-bar { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); width: 0%; transition: width 0.3s ease; }
+
+  /* LEGEND */
+  #legend {
+    position: absolute; bottom: 28px; right: 10px;
+    background: rgba(12,12,12,0.94); border: 1px solid var(--border);
+    padding: 12px 16px; z-index: 1000; font-size: 0.65rem;
+    border-radius: 3px; backdrop-filter: blur(6px);
+  }
+  .leg-title { color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 9px; }
+  .leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+  .leg-line { width: 22px; height: 3px; border-radius: 1px; }
+  .leg-hint { color: var(--muted); margin-top: 8px; font-size: 0.6rem; }
+
+  /* TOOLTIP */
+  #tt {
+    position: fixed; background: rgba(12,12,12,0.97);
+    border: 1px solid var(--gold-dim); padding: 8px 12px;
+    font-size: 0.7rem; z-index: 5000; pointer-events: none;
+    border-radius: 3px; display: none; max-width: 220px;
+  }
+  #tt-name { font-weight: 700; color: var(--gold); margin-bottom: 3px; font-size: 0.82rem; }
+  #tt-info { color: var(--muted); }
+
+  /* ERROR */
+  #error-box {
+    display: none; position: absolute; inset: 0;
+    background: rgba(8,8,8,0.97); z-index: 9999;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; text-align: center; padding: 40px;
+  }
+  #error-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #f87171; letter-spacing: 4px; }
+  #error-box p { color: var(--muted); font-size: 0.72rem; line-height: 2.2; max-width: 460px; }
+  #error-box code { color: var(--text); background: #1e1e1e; padding: 3px 8px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="logo">SF&nbsp;Walker</div>
+  <div id="stats">
+    <div class="stat-block">
+      <div class="stat-label">Walked</div>
+      <div class="stat-val g" id="s-walked">0.0 mi</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Remaining</div>
+      <div class="stat-val" id="s-remain">— mi</div>
+    </div>
+    <div class="stat-block" style="flex:1.4">
+      <div class="stat-label">Progress</div>
+      <div class="stat-val o" id="s-pct">0.0%</div>
+      <div id="progress-wrap"><div id="progress-fill"></div></div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Streets Done</div>
+      <div class="stat-val" id="s-count">0 / —</div>
+    </div>
+  </div>
+  <div id="toolbar">
+    <div id="sync-dot" title="Sync status"></div>
+    <button class="btn active" id="btn-walk" onclick="setMode('walk')">✓ Mark Walked</button>
+    <button class="btn" id="btn-unwalk" onclick="setMode('unwalk')">✗ Unmark</button>
+    <button class="btn red" onclick="resetAll()">Reset All</button>
+  </div>
+</div>
+
+<div id="map-wrap">
+  <div id="map"></div>
+
+  <div id="loading">
+    <div class="ring"></div>
+    <h2>SF Street Walker</h2>
+    <div id="load-bar-wrap"><div id="load-bar"></div></div>
+    <div id="load-msg">Starting up…</div>
+  </div>
+
+  <div id="error-box">
+    <h2>Something Went Wrong</h2>
+    <p id="err-detail"></p>
+    <button class="btn" onclick="location.reload()">↺ Try Again</button>
+  </div>
+
+  <div id="legend">
+    <div class="leg-title">Streets</div>
+    <div class="leg-row"><div class="leg-line" style="background:var(--green)"></div>Walked</div>
+    <div class="leg-row"><div class="leg-line" style="background:var(--unwalked)"></div>Not walked</div>
+    <div class="leg-hint">Click any street to toggle</div>
+  </div>
+
+  <div id="tt"><div id="tt-name"></div><div id="tt-info"></div></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  CONFIG — fill these in before deploying
+// ══════════════════════════════════════════════════
+const SUPABASE_URL    = 'YOUR_SUPABASE_URL';      // e.g. https://xxxx.supabase.co
+const SUPABASE_ANON   = 'YOUR_SUPABASE_ANON_KEY'; // anon/public key from Supabase dashboard
+
+const OVERPASS_QUERY = `[out:json][timeout:90];
+(
+  way["highway"~"^(residential|tertiary|secondary|primary|trunk|unclassified|living_street|pedestrian|service)$"]["name"]
+  (37.7080,-122.5200,37.8330,-122.3570);
+);
+out body geom;`;
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Single shared user — all visitors see and edit the same walked streets
+const UID = 'shared';
+
+let walkedSet = new Set();
+let streets   = [];
+let layers    = {};
+let mode      = 'walk';
+let map;
+let saveQueue = [];
+let saveTimer = null;
+
+// ── Sync dot ───────────────────────────────────────
+function syncDot(state) {
+  const d = document.getElementById('sync-dot');
+  d.className = '';
+  if (state) d.classList.add(state);
+}
+
+// ── Stats ──────────────────────────────────────────
+function updateStats() {
+  let walked = 0, total = 0, walkedCt = 0;
+  streets.forEach(s => {
+    total += s.miles;
+    if (walkedSet.has(s.id)) { walked += s.miles; walkedCt++; }
+  });
+  const pct = total > 0 ? walked / total * 100 : 0;
+  document.getElementById('s-walked').textContent  = walked.toFixed(1) + ' mi';
+  document.getElementById('s-remain').textContent  = (total - walked).toFixed(1) + ' mi';
+  document.getElementById('s-pct').textContent     = pct.toFixed(1) + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('s-count').textContent   = walkedCt + ' / ' + streets.length;
+}
+
+// ── Mode ───────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-walk').classList.toggle('active', m === 'walk');
+  document.getElementById('btn-unwalk').classList.toggle('active', m === 'unwalk');
+}
+
+// ── Layer styling ──────────────────────────────────
+function styleLayer(id) {
+  const lyr = layers[id];
+  if (!lyr) return;
+  const w = walkedSet.has(id);
+  lyr.setStyle({ color: w ? '#5adf8a' : '#2d3d4d', weight: w ? 3.5 : 1.8, opacity: w ? 1 : 0.65 });
+  if (w) lyr.bringToFront();
+}
+
+// ── Supabase: load walked streets ──────────────────
+async function loadWalked() {
+  const { data, error } = await supabase
+    .from('walked_streets')
+    .select('way_id')
+    .eq('uid', UID);
+  if (error) throw error;
+  walkedSet = new Set((data || []).map(r => r.way_id));
+}
+
+// ── Supabase: debounced batch save ─────────────────
+function queueSave(id, isWalked) {
+  saveQueue.push({ id, isWalked });
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 600);
+  syncDot('syncing');
+}
+
+async function flushSave() {
+  const batch = saveQueue.splice(0);
+  if (!batch.length) return;
+
+  const toInsert = batch.filter(x =>  x.isWalked).map(x => ({ uid: UID, way_id: x.id }));
+  const toDelete = batch.filter(x => !x.isWalked).map(x => x.id);
+
+  try {
+    if (toInsert.length) {
+      const { error } = await supabase.from('walked_streets').upsert(toInsert, { onConflict: 'uid,way_id' });
+      if (error) throw error;
+    }
+    if (toDelete.length) {
+      const { error } = await supabase.from('walked_streets').delete().eq('uid', UID).in('way_id', toDelete);
+      if (error) throw error;
+    }
+    syncDot('ok');
+    setTimeout(() => syncDot(''), 2000);
+  } catch(e) {
+    syncDot('err');
+    console.error('Save error:', e);
+  }
+}
+
+// ── Reset ──────────────────────────────────────────
+async function resetAll() {
+  if (!confirm('Clear ALL walked streets from your account? This cannot be undone.')) return;
+  syncDot('syncing');
+  const { error } = await supabase.from('walked_streets').delete().eq('uid', UID);
+  if (error) { syncDot('err'); return; }
+  walkedSet.clear();
+  streets.forEach(s => styleLayer(s.id));
+  updateStats();
+  syncDot('ok');
+  setTimeout(() => syncDot(''), 2000);
+}
+
+// ── Geo helper ─────────────────────────────────────
+function segmentMiles(pts) {
+  let m = 0;
+  const R = 6371000, r = Math.PI / 180;
+  for (let i = 1; i < pts.length; i++) {
+    const [la1, lo1] = pts[i-1], [la2, lo2] = pts[i];
+    const dLa = (la2-la1)*r, dLo = (lo2-lo1)*r;
+    const a = Math.sin(dLa/2)**2 + Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dLo/2)**2;
+    m += R * 2 * Math.asin(Math.sqrt(a));
+  }
+  return m / 1609.344;
+}
+
+// ── Tooltip ────────────────────────────────────────
+const tt = document.getElementById('tt');
+document.addEventListener('mousemove', e => {
+  tt.style.left = (e.clientX + 16) + 'px';
+  tt.style.top  = (e.clientY - 44) + 'px';
+});
+
+// ── Layer creation ─────────────────────────────────
+function addStreetLayer(street) {
+  const w = walkedSet.has(street.id);
+  const lyr = L.polyline(street.latlngs, {
+    color: w ? '#5adf8a' : '#2d3d4d', weight: w ? 3.5 : 1.8,
+    opacity: w ? 1 : 0.65, bubblingMouseEvents: false,
+  }).addTo(map);
+
+  lyr.on('click', () => {
+    const nowWalked = mode === 'walk';
+    if (nowWalked) walkedSet.add(street.id); else walkedSet.delete(street.id);
+    styleLayer(street.id);
+    updateStats();
+    queueSave(street.id, nowWalked);
+  });
+
+  lyr.on('mouseover', () => {
+    document.getElementById('tt-name').textContent = street.name;
+    document.getElementById('tt-info').textContent =
+      street.miles.toFixed(2) + ' mi  ·  ' + (walkedSet.has(street.id) ? '✓ Walked' : 'Not yet');
+    tt.style.display = 'block';
+    if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#7aaac8', opacity: 0.9 });
+  });
+
+  lyr.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
+
+  layers[street.id] = lyr;
+}
+
+// ── Loading helpers ────────────────────────────────
+function setLoadMsg(txt, pct) {
+  document.getElementById('load-msg').textContent = txt;
+  if (pct !== undefined) document.getElementById('load-bar').style.width = pct + '%';
+}
+
+function showError(html) {
+  document.getElementById('loading').style.display = 'none';
+  const eb = document.getElementById('error-box');
+  eb.style.display = 'flex';
+  document.getElementById('err-detail').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+//  MAIN
+// ══════════════════════════════════════════════════
+async function init() {
+  // Init map
+  map = L.map('map', { center: [37.7749, -122.4194], zoom: 14 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19,
+  }).addTo(map);
+
+  // Load walked data from Supabase
+  setLoadMsg('Loading your progress from Supabase…', 8);
+  try { await loadWalked(); }
+  catch(e) { showError('Could not load your data from Supabase.<br><br>Check that your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON</code> are correct in <code>index.html</code>.<br><br>Error: <code>' + e.message + '</code>'); return; }
+
+  // Fetch streets from Overpass
+  setLoadMsg('Fetching SF streets from OpenStreetMap (~20s)…', 15);
+  let data;
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(OVERPASS_QUERY),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setLoadMsg('Downloading street geometry…', 45);
+    data = await res.json();
+  } catch(e) {
+    showError('Could not reach the OpenStreetMap API.<br><br>Error: <code>' + e.message + '</code>');
+    return;
+  }
+
+  const ways = data.elements.filter(e => e.type === 'way' && e.geometry?.length >= 2 && e.tags?.name);
+  setLoadMsg('Rendering ' + ways.length + ' streets…', 62);
+
+  // Batch render to keep UI responsive
+  let i = 0;
+  function renderChunk() {
+    const end = Math.min(i + 400, ways.length);
+    for (; i < end; i++) {
+      const el = ways[i];
+      const id = String(el.id);
+      const latlngs = el.geometry.map(p => [p.lat, p.lon]);
+      const street = { id, name: el.tags.name, miles: segmentMiles(latlngs), latlngs };
+      streets.push(street);
+      addStreetLayer(street);
+    }
+    document.getElementById('load-bar').style.width = (62 + Math.round(i / ways.length * 36)) + '%';
+    if (i < ways.length) { requestAnimationFrame(renderChunk); return; }
+
+    updateStats();
+    document.getElementById('loading').style.display = 'none';
+    syncDot('ok');
+    setTimeout(() => syncDot(''), 2000);
+  }
+  requestAnimationFrame(renderChunk);
+}
+
+init();
+</script>
+</body>
+</html>
