@@ -643,8 +643,8 @@ function confirmRoute() {
 // We require multiple consecutive route points to be close to the street,
 // meaning the route is following it — not just crossing perpendicularly.
 function routeIntersectsStreet(routePts, streetPts) {
-  const CLOSE  = 0.00012; // ~12m — point must be this close to street
-  const MIN_ALONG = 3;    // need at least this many consecutive close points
+  const CLOSE  = 0.00006; // ~6m — much tighter, hugs the actual street
+  const MIN_ALONG = 6;    // need 6 consecutive close points (~30-60m of travel)
 
   let consecutive = 0;
   for (const rp of routePts) {
