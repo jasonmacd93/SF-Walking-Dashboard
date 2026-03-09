@@ -12,7 +12,6 @@
   :root {
     --sky: #e8f4fd;
     --white: #ffffff;
-    --panel: #ffffff;
     --border: #e2e8f0;
     --teal: #0ea5e9;
     --teal-dark: #0284c7;
@@ -20,134 +19,158 @@
     --coral-dark: #ea6c0a;
     --mint: #10b981;
     --mint-dark: #059669;
+    --purple: #8b5cf6;
+    --purple-dark: #7c3aed;
     --red: #ef4444;
     --text: #1e293b;
     --muted: #94a3b8;
-    --walked-color: #f97316;
-    --unwalked-color: #cbd5e1;
     --shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
   body { font-family: 'Nunito Sans', sans-serif; background: var(--sky); color: var(--text); display: flex; flex-direction: column; }
 
-  /* HEADER */
+  /* ── MAIN HEADER ── */
   #header {
     display: flex; align-items: center; height: 62px;
     background: var(--white); border-bottom: 2px solid var(--border);
-    flex-shrink: 0; overflow: hidden;
-    box-shadow: var(--shadow);
-    z-index: 100;
+    flex-shrink: 0; box-shadow: var(--shadow); z-index: 200;
   }
-
   #logo {
     font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.3rem;
-    letter-spacing: -0.5px; padding: 0 22px;
-    border-right: 2px solid var(--border); height: 100%;
-    display: flex; align-items: center; white-space: nowrap; gap: 8px;
-    color: var(--teal-dark);
+    padding: 0 20px; border-right: 2px solid var(--border); height: 100%;
+    display: flex; align-items: center; gap: 8px; color: var(--teal-dark); white-space: nowrap;
   }
-  #logo .logo-icon { font-size: 1.4rem; }
-
   #stats { display: flex; flex: 1; height: 100%; }
-
   .stat-block {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    border-right: 2px solid var(--border); padding: 6px 14px;
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; border-right: 2px solid var(--border); padding: 6px 14px;
   }
   .stat-label { font-size: 0.58rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
   .stat-val { font-family: 'Nunito', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text); }
   .stat-val.g { color: var(--mint); }
   .stat-val.o { color: var(--coral); }
-
   #progress-wrap { width: 88%; height: 6px; background: var(--border); border-radius: 99px; margin-top: 4px; overflow: hidden; }
   #progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); width: 0%; transition: width 0.5s cubic-bezier(.4,0,.2,1); border-radius: 99px; }
-
   #toolbar { display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 100%; }
+  #sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; flex-shrink: 0; }
+  #sync-dot.syncing { background: var(--teal); animation: pulse 0.8s infinite; }
+  #sync-dot.ok { background: var(--mint); }
+  #sync-dot.err { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.25;} }
 
+  /* ── BUTTONS ── */
   .btn {
     font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.72rem;
-    letter-spacing: 0.3px; padding: 7px 14px;
-    border: 2px solid transparent; background: var(--border);
+    padding: 7px 14px; border: 2px solid transparent; background: var(--border);
     color: var(--text); cursor: pointer; border-radius: 99px;
     transition: all 0.15s; white-space: nowrap;
   }
   .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-  .btn.active.walk-btn { background: var(--mint); color: white; border-color: var(--mint-dark); }
-  .btn.active.unwalk-btn { background: var(--coral); color: white; border-color: var(--coral-dark); }
-  .btn.red { background: #fee2e2; color: var(--red); border-color: #fecaca; }
+  .btn.active.walk-btn  { background: var(--mint);   color: white; border-color: var(--mint-dark); }
+  .btn.active.unwalk-btn{ background: var(--coral);  color: white; border-color: var(--coral-dark); }
+  .btn.active.route-btn { background: var(--purple); color: white; border-color: var(--purple-dark); }
+  .btn.red  { background: #fee2e2; color: var(--red); border-color: #fecaca; }
   .btn.red:hover { background: var(--red); color: white; }
+  .btn.confirm { background: var(--mint); color: white; border-color: var(--mint-dark); }
+  .btn.confirm:hover { background: var(--mint-dark); }
 
-  /* SYNC INDICATOR */
-  #sync-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--border); transition: background 0.3s; flex-shrink: 0;
+  /* ── ROUTE TOOLBAR ── */
+  #route-bar {
+    display: none; align-items: center; gap: 10px; padding: 10px 18px;
+    background: #f5f0ff; border-bottom: 2px solid #ddd6fe;
+    flex-shrink: 0; flex-wrap: wrap; z-index: 190;
   }
-  #sync-dot.syncing { background: var(--teal); animation: pulse 0.8s infinite; }
-  #sync-dot.ok { background: var(--mint); }
-  #sync-dot.err { background: var(--red); }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+  #route-bar.open { display: flex; }
+  .route-bar-title {
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 0.8rem;
+    color: var(--purple-dark); white-space: nowrap;
+  }
+  .addr-group { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 200px; }
+  .addr-label { font-size: 0.7rem; font-weight: 800; color: var(--purple-dark); white-space: nowrap; }
+  .addr-input {
+    font-family: 'Nunito Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+    padding: 6px 12px; border: 2px solid #ddd6fe; border-radius: 99px;
+    background: white; color: var(--text); flex: 1; outline: none;
+    transition: border-color 0.15s;
+  }
+  .addr-input:focus { border-color: var(--purple); }
+  .addr-input.has-pin { border-color: var(--mint); background: #f0fdf4; }
+  .route-divider { color: #c4b5fd; font-size: 1rem; }
+  #route-status { font-size: 0.7rem; font-weight: 600; color: var(--purple); white-space: nowrap; }
+  #route-actions { display: flex; gap: 8px; align-items: center; }
 
-  /* MAP */
+  /* Pin click hint on map */
+  #pin-hint {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: white; border: 2px solid var(--purple);
+    border-radius: 99px; padding: 8px 18px; font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 0.78rem; color: var(--purple-dark);
+    z-index: 1000; pointer-events: none; display: none;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.2);
+  }
+
+  /* Route line on map */
+  /* (styled via Leaflet) */
+
+  /* ── MAP ── */
   #map-wrap { flex: 1; position: relative; overflow: hidden; }
   #map { width: 100%; height: 100%; }
 
-  /* LOADING */
+  /* ── LOADING ── */
   #loading {
     position: absolute; inset: 0;
-    background: linear-gradient(135deg, #e0f2fe 0%, #ecfdf5 100%);
+    background: linear-gradient(135deg, #e0f2fe, #ecfdf5);
     z-index: 9999; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 20px;
   }
   #loading .load-emoji { font-size: 3.5rem; animation: bounce 1s ease-in-out infinite; }
-  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  #loading h2 { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 2rem; color: var(--teal-dark); letter-spacing: -1px; }
-  #load-msg { font-size: 0.75rem; font-weight: 600; color: var(--muted); max-width: 340px; text-align: center; line-height: 1.8; }
-  #load-bar-wrap { width: 260px; height: 8px; background: white; border-radius: 99px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-  #load-bar { height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); width: 0%; transition: width 0.3s ease; border-radius: 99px; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
+  #loading h2 { font-family:'Nunito',sans-serif; font-weight:900; font-size:2rem; color:var(--teal-dark); }
+  #load-msg { font-size:0.75rem; font-weight:600; color:var(--muted); max-width:340px; text-align:center; line-height:1.8; }
+  #load-bar-wrap { width:260px; height:8px; background:white; border-radius:99px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.1); }
+  #load-bar { height:100%; background:linear-gradient(90deg,var(--teal),var(--mint)); width:0%; transition:width 0.3s ease; border-radius:99px; }
 
-  /* LEGEND */
+  /* ── LEGEND ── */
   #legend {
     position: absolute; bottom: 28px; right: 10px;
     background: white; border: 2px solid var(--border);
     padding: 12px 16px; z-index: 1000; font-size: 0.68rem;
     border-radius: 14px; box-shadow: var(--shadow);
   }
-  .leg-title { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text); letter-spacing: 0; text-transform: none; margin-bottom: 9px; font-size: 0.75rem; }
-  .leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; font-weight: 600; color: var(--text); }
-  .leg-line { width: 22px; height: 4px; border-radius: 99px; }
-  .leg-hint { color: var(--muted); margin-top: 8px; font-size: 0.62rem; }
+  .leg-title { font-family:'Nunito',sans-serif; font-weight:800; color:var(--text); margin-bottom:9px; font-size:0.75rem; }
+  .leg-row { display:flex; align-items:center; gap:9px; margin-bottom:6px; font-weight:600; color:var(--text); }
+  .leg-line { width:22px; height:4px; border-radius:99px; }
+  .leg-hint { color:var(--muted); margin-top:8px; font-size:0.62rem; }
 
-  /* TOOLTIP */
+  /* ── TOOLTIP ── */
   #tt {
-    position: fixed; background: white;
-    border: 2px solid var(--border); padding: 9px 13px;
-    font-size: 0.72rem; z-index: 5000; pointer-events: none;
-    border-radius: 12px; display: none; max-width: 220px;
+    position: fixed; background: white; border: 2px solid var(--border);
+    padding: 9px 13px; font-size: 0.72rem; z-index: 5000;
+    pointer-events: none; border-radius: 12px; display: none; max-width: 220px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   }
-  #tt-name { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--teal-dark); margin-bottom: 3px; font-size: 0.85rem; }
-  #tt-info { color: var(--muted); font-weight: 600; }
+  #tt-name { font-family:'Nunito',sans-serif; font-weight:800; color:var(--teal-dark); margin-bottom:3px; font-size:0.85rem; }
+  #tt-info { color:var(--muted); font-weight:600; }
 
-  /* ERROR */
+  /* ── ERROR ── */
   #error-box {
     display: none; position: absolute; inset: 0;
-    background: linear-gradient(135deg, #fff1f2, #fef3c7);
+    background: linear-gradient(135deg,#fff1f2,#fef3c7);
     z-index: 9999; flex-direction: column; align-items: center;
     justify-content: center; gap: 16px; text-align: center; padding: 40px;
   }
-  #error-box .err-emoji { font-size: 3rem; }
-  #error-box h2 { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.8rem; color: var(--red); }
-  #error-box p { color: #64748b; font-size: 0.78rem; line-height: 2; max-width: 460px; font-weight: 600; }
-  #error-box code { color: var(--text); background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); }
+  #error-box .err-emoji { font-size:3rem; }
+  #error-box h2 { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.8rem; color:var(--red); }
+  #error-box p { color:#64748b; font-size:0.78rem; line-height:2; max-width:460px; font-weight:600; }
+  #error-box code { color:var(--text); background:white; padding:2px 8px; border-radius:6px; border:1px solid var(--border); }
 </style>
 </head>
 <body>
 
+<!-- MAIN HEADER -->
 <div id="header">
-  <div id="logo"><span class="logo-icon">🥾</span> SF Walker</div>
+  <div id="logo">🥾 SF Walker</div>
   <div id="stats">
     <div class="stat-block">
       <div class="stat-label">🟢 Walked</div>
@@ -170,8 +193,36 @@
   <div id="toolbar">
     <div id="sync-dot" title="Sync status"></div>
     <button class="btn walk-btn active" id="btn-walk" onclick="setMode('walk')">✅ Mark Walked</button>
-    <button class="btn unwalk-btn" id="btn-unwalk" onclick="setMode('unwalk')">↩️ Unmark</button>
-    <button class="btn red" onclick="resetAll()">🗑️ Reset</button>
+    <button class="btn unwalk-btn"      id="btn-unwalk" onclick="setMode('unwalk')">↩️ Unmark</button>
+    <button class="btn route-btn"       id="btn-route"  onclick="toggleRouteBar()">🗺️ Plan Route</button>
+    <button class="btn red"             onclick="resetAll()">🗑️ Reset</button>
+  </div>
+</div>
+
+<!-- ROUTE TOOLBAR (slides in below header) -->
+<div id="route-bar">
+  <div class="route-bar-title">📍 Plan a Route</div>
+
+  <div class="addr-group">
+    <div class="addr-label">From</div>
+    <input class="addr-input" id="addr-from" placeholder="Address or click map…" oninput="onAddrInput('from')"/>
+    <button class="btn" style="padding:6px 10px; font-size:0.7rem;" onclick="activateMapPin('from')" title="Pick on map">📌</button>
+  </div>
+
+  <div class="route-divider">→</div>
+
+  <div class="addr-group">
+    <div class="addr-label">To</div>
+    <input class="addr-input" id="addr-to" placeholder="Address or click map…" oninput="onAddrInput('to')"/>
+    <button class="btn" style="padding:6px 10px; font-size:0.7rem;" onclick="activateMapPin('to')" title="Pick on map">📌</button>
+  </div>
+
+  <div id="route-status"></div>
+
+  <div id="route-actions">
+    <button class="btn confirm" id="btn-go" onclick="calcRoute()" disabled>Get Route</button>
+    <button class="btn" id="btn-confirm-route" style="display:none" onclick="confirmRoute()">✅ Mark as Walked</button>
+    <button class="btn red" onclick="clearRoute()">✕ Clear</button>
   </div>
 </div>
 
@@ -189,25 +240,27 @@
     <div class="err-emoji">😬</div>
     <h2>Something Went Wrong</h2>
     <p id="err-detail"></p>
-    <button class="btn walk-btn active" onclick="location.reload()">↺ Try Again</button>
+    <button class="btn confirm" onclick="location.reload()">↺ Try Again</button>
   </div>
 
   <div id="legend">
     <div class="leg-title">Streets</div>
     <div class="leg-row"><div class="leg-line" style="background:#f97316"></div>Walked 🎉</div>
     <div class="leg-row"><div class="leg-line" style="background:#cbd5e1"></div>Not yet</div>
+    <div class="leg-row"><div class="leg-line" style="background:#8b5cf6"></div>Planned route</div>
     <div class="leg-hint">Click any street to toggle</div>
   </div>
 
+  <div id="pin-hint"></div>
   <div id="tt"><div id="tt-name"></div><div id="tt-info"></div></div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  CONFIG — fill these in before deploying
-// ══════════════════════════════════════════════════
-const SUPABASE_URL    = 'https://auvbspireszhuhttkzlf.supabase.co';      // e.g. https://xxxx.supabase.co
-const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dmJzcGlyZXN6aHVodHRremxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTM0OTAsImV4cCI6MjA4ODU4OTQ5MH0.kgnzF6IL_KwB8sAtTSoG-inzSNPjC6ky5pK6_Lmt8_E'; // anon/public key from Supabase dashboard
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+const SUPABASE_URL  = 'https://auvbspireszhuhttkzlf.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dmJzcGlyZXN6aHVodHRremxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTM0OTAsImV4cCI6MjA4ODU4OTQ5MH0.kgnzF6IL_KwB8sAtTSoG-inzSNPjC6ky5pK6_Lmt8_E';
 
 const OVERPASS_QUERY = `[out:json][timeout:90];
 (
@@ -216,12 +269,10 @@ const OVERPASS_QUERY = `[out:json][timeout:90];
 );
 out body geom;`;
 
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-// Single shared user — all visitors see and edit the same walked streets
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const db  = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 const UID = 'shared';
 
 let walkedSet = new Set();
@@ -229,58 +280,30 @@ let streets   = [];
 let layers    = {};
 let mode      = 'walk';
 let map;
-let saveQueue = [];
-let saveTimer = null;
+let saveQueue = [], saveTimer = null;
 
-// ── Sync dot ───────────────────────────────────────
-function syncDot(state) {
+// Route state
+let routePins     = { from: null, to: null };   // { latlng, marker }
+let pinTarget     = null;   // 'from' | 'to' | null — waiting for map click
+let routeLayer    = null;   // current drawn route polyline
+let routeWaypoints = [];    // decoded coords of current route
+let extraWaypoints = [];    // user-dragged intermediate waypoints
+let waypointMarkers = [];   // markers for drag handles
+
+// ══════════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════════
+function syncDot(s) {
   const d = document.getElementById('sync-dot');
-  d.className = '';
-  if (state) d.classList.add(state);
+  d.className = s || '';
 }
 
-// ── Stats ──────────────────────────────────────────
-function updateStats() {
-  let walked = 0, total = 0, walkedCt = 0;
-  streets.forEach(s => {
-    total += s.miles;
-    if (walkedSet.has(s.id)) { walked += s.miles; walkedCt++; }
-  });
-  const pct = total > 0 ? walked / total * 100 : 0;
-  document.getElementById('s-walked').textContent  = walked.toFixed(1) + ' mi';
-  document.getElementById('s-remain').textContent  = (total - walked).toFixed(1) + ' mi';
-  document.getElementById('s-pct').textContent     = pct.toFixed(1) + '%';
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('s-count').textContent   = walkedCt + ' / ' + streets.length;
-}
-
-// ── Mode ───────────────────────────────────────────
-function setMode(m) {
-  mode = m;
-  document.getElementById('btn-walk').classList.toggle('active', m === 'walk');
-  document.getElementById('btn-unwalk').classList.toggle('active', m === 'unwalk');
-}
-
-// ── Layer styling ──────────────────────────────────
-function styleLayer(id) {
-  const lyr = layers[id];
-  if (!lyr) return;
-  const w = walkedSet.has(id);
-  lyr.setStyle({ color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2, opacity: w ? 1 : 0.5 });
-  if (w) lyr.bringToFront();
-}
-
-// ── Supabase: load walked streets ──────────────────
 async function loadWalked() {
-  const { data, error } = await db
-    .from('walked_streets')
-    .select('way_id')
-    .eq('uid', UID);
+  const { data, error } = await db.from('walked_streets').select('way_id').eq('uid', UID);
   if (error) throw error;
   walkedSet = new Set((data || []).map(r => r.way_id));
 }
 
-// ── Supabase: debounced batch save ─────────────────
 function queueSave(id, isWalked) {
   saveQueue.push({ id, isWalked });
   clearTimeout(saveTimer);
@@ -291,41 +314,375 @@ function queueSave(id, isWalked) {
 async function flushSave() {
   const batch = saveQueue.splice(0);
   if (!batch.length) return;
-
   const toInsert = batch.filter(x =>  x.isWalked).map(x => ({ uid: UID, way_id: x.id }));
   const toDelete = batch.filter(x => !x.isWalked).map(x => x.id);
-
   try {
-    if (toInsert.length) {
-      const { error } = await db.from('walked_streets').upsert(toInsert, { onConflict: 'uid,way_id' });
-      if (error) throw error;
-    }
-    if (toDelete.length) {
-      const { error } = await db.from('walked_streets').delete().eq('uid', UID).in('way_id', toDelete);
-      if (error) throw error;
-    }
-    syncDot('ok');
-    setTimeout(() => syncDot(''), 2000);
-  } catch(e) {
-    syncDot('err');
-    console.error('Save error:', e);
-  }
+    if (toInsert.length) { const { error } = await db.from('walked_streets').upsert(toInsert, { onConflict: 'uid,way_id' }); if (error) throw error; }
+    if (toDelete.length) { const { error } = await db.from('walked_streets').delete().eq('uid', UID).in('way_id', toDelete); if (error) throw error; }
+    syncDot('ok'); setTimeout(() => syncDot(''), 2000);
+  } catch(e) { syncDot('err'); console.error(e); }
 }
 
-// ── Reset ──────────────────────────────────────────
 async function resetAll() {
-  if (!confirm('Clear ALL walked streets from your account? This cannot be undone.')) return;
+  if (!confirm('Clear ALL walked streets? This cannot be undone.')) return;
   syncDot('syncing');
   const { error } = await db.from('walked_streets').delete().eq('uid', UID);
   if (error) { syncDot('err'); return; }
   walkedSet.clear();
   streets.forEach(s => styleLayer(s.id));
   updateStats();
-  syncDot('ok');
-  setTimeout(() => syncDot(''), 2000);
+  syncDot('ok'); setTimeout(() => syncDot(''), 2000);
 }
 
-// ── Geo helper ─────────────────────────────────────
+// ══════════════════════════════════════════════
+//  STATS & LAYERS
+// ══════════════════════════════════════════════
+function updateStats() {
+  let walked = 0, total = 0, walkedCt = 0;
+  streets.forEach(s => {
+    total += s.miles;
+    if (walkedSet.has(s.id)) { walked += s.miles; walkedCt++; }
+  });
+  const pct = total > 0 ? walked / total * 100 : 0;
+  document.getElementById('s-walked').textContent = walked.toFixed(1) + ' mi';
+  document.getElementById('s-remain').textContent = (total - walked).toFixed(1) + ' mi';
+  document.getElementById('s-pct').textContent    = pct.toFixed(1) + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('s-count').textContent  = walkedCt + ' / ' + streets.length;
+}
+
+function styleLayer(id) {
+  const lyr = layers[id];
+  if (!lyr) return;
+  const w = walkedSet.has(id);
+  lyr.setStyle({ color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2, opacity: w ? 1 : 0.5 });
+  if (w) lyr.bringToFront();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-walk').classList.toggle('active', m === 'walk');
+  document.getElementById('btn-unwalk').classList.toggle('active', m === 'unwalk');
+  // deactivate route mode if switching
+  if (m !== 'route') {
+    document.getElementById('btn-route').classList.remove('active');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  STREET LAYERS
+// ══════════════════════════════════════════════
+const tt = document.getElementById('tt');
+document.addEventListener('mousemove', e => {
+  tt.style.left = (e.clientX + 16) + 'px';
+  tt.style.top  = (e.clientY - 44) + 'px';
+});
+
+function addStreetLayer(street) {
+  const w = walkedSet.has(street.id);
+  const lyr = L.polyline(street.latlngs, {
+    color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2,
+    opacity: w ? 1 : 0.5, bubblingMouseEvents: false,
+  }).addTo(map);
+
+  lyr.on('click', () => {
+    if (pinTarget) return; // ignore clicks when placing pins
+    const nowWalked = mode === 'walk';
+    if (nowWalked) walkedSet.add(street.id); else walkedSet.delete(street.id);
+    styleLayer(street.id);
+    updateStats();
+    queueSave(street.id, nowWalked);
+  });
+
+  lyr.on('mouseover', () => {
+    if (pinTarget) return;
+    document.getElementById('tt-name').textContent = street.name;
+    document.getElementById('tt-info').textContent =
+      street.miles.toFixed(2) + ' mi  ·  ' + (walkedSet.has(street.id) ? '✓ Walked' : 'Not yet');
+    tt.style.display = 'block';
+    if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#0ea5e9', opacity: 0.9 });
+  });
+
+  lyr.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
+  layers[street.id] = lyr;
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — UI TOGGLE
+// ══════════════════════════════════════════════
+function toggleRouteBar() {
+  const bar = document.getElementById('route-bar');
+  const btn = document.getElementById('btn-route');
+  const isOpen = bar.classList.contains('open');
+  if (isOpen) {
+    bar.classList.remove('open');
+    btn.classList.remove('active');
+    clearRoute();
+  } else {
+    bar.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — PIN PLACEMENT
+// ══════════════════════════════════════════════
+function makePinMarker(latlng, label, color) {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="background:${color};color:white;font-family:Nunito,sans-serif;font-weight:900;
+           font-size:0.7rem;padding:4px 10px;border-radius:99px;white-space:nowrap;
+           box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid white;">${label}</div>`,
+    iconAnchor: [20, 12],
+  });
+  return L.marker(latlng, { icon, draggable: true });
+}
+
+function placePin(which, latlng, label) {
+  if (routePins[which]?.marker) map.removeLayer(routePins[which].marker);
+  const color = which === 'from' ? '#10b981' : '#f97316';
+  const marker = makePinMarker(latlng, label || (which === 'from' ? '🟢 Start' : '🟠 End'), color);
+  marker.addTo(map);
+  marker.on('dragend', () => {
+    routePins[which] = { latlng: marker.getLatLng(), marker };
+    if (routeLayer) calcRoute(); // re-route if route already drawn
+  });
+  routePins[which] = { latlng, marker };
+
+  // Update input to show coordinates as confirmation
+  const input = document.getElementById('addr-' + which);
+  if (!input.value.trim() || input.dataset.fromPin === 'true') {
+    input.value = latlng.lat.toFixed(5) + ', ' + latlng.lng.toFixed(5);
+    input.dataset.fromPin = 'true';
+  }
+  input.classList.add('has-pin');
+  updateGoBtn();
+}
+
+function activateMapPin(which) {
+  pinTarget = which;
+  document.getElementById('pin-hint').textContent =
+    which === 'from' ? '📍 Click the map to set your start point' : '📍 Click the map to set your end point';
+  document.getElementById('pin-hint').style.display = 'block';
+  map.getContainer().style.cursor = 'crosshair';
+}
+
+function onAddrInput(which) {
+  document.getElementById('addr-' + which).dataset.fromPin = 'false';
+  document.getElementById('addr-' + which).classList.remove('has-pin');
+  updateGoBtn();
+}
+
+function updateGoBtn() {
+  const hasFrom = routePins.from || document.getElementById('addr-from').value.trim();
+  const hasTo   = routePins.to   || document.getElementById('addr-to').value.trim();
+  document.getElementById('btn-go').disabled = !(hasFrom && hasTo);
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — GEOCODING
+// ══════════════════════════════════════════════
+async function geocode(query) {
+  // If it looks like lat,lng just parse it
+  const coordMatch = query.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+  if (coordMatch) return { lat: parseFloat(coordMatch[1]), lng: parseFloat(coordMatch[2]) };
+
+  const q = encodeURIComponent(query + ', San Francisco, CA');
+  const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+  const data = await res.json();
+  if (!data.length) throw new Error(`Could not find "${query}"`);
+  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — OSRM ROUTING
+// ══════════════════════════════════════════════
+async function fetchRoute(waypoints) {
+  // waypoints: array of {lat, lng}
+  const coords = waypoints.map(p => p.lng + ',' + p.lat).join(';');
+  const url = `https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson&continue_straight=false`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Routing service error');
+  const data = await res.json();
+  if (data.code !== 'Ok' || !data.routes.length) throw new Error('No route found');
+  return data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — DRAW
+// ══════════════════════════════════════════════
+function drawRoute(latlngs) {
+  if (routeLayer) map.removeLayer(routeLayer);
+
+  // Shadow layer
+  const shadow = L.polyline(latlngs, { color: 'rgba(0,0,0,0.15)', weight: 8, lineCap: 'round' }).addTo(map);
+  // Main route
+  routeLayer = L.polyline(latlngs, {
+    color: '#8b5cf6', weight: 5, opacity: 0.9, lineCap: 'round',
+  }).addTo(map);
+  routeLayer._shadow = shadow;
+  routeWaypoints = latlngs;
+
+  // Add draggable midpoint handles every ~20 points
+  clearWaypointMarkers();
+  const step = Math.max(1, Math.floor(latlngs.length / 8));
+  for (let i = step; i < latlngs.length - step; i += step) {
+    addDragHandle(latlngs[i], i);
+  }
+
+  // Fit map to route
+  map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+  // Show confirm button
+  const miles = segmentMiles(latlngs);
+  document.getElementById('route-status').textContent = `📏 ${miles.toFixed(2)} mi`;
+  document.getElementById('btn-confirm-route').style.display = 'inline-block';
+  document.getElementById('btn-go').textContent = '↺ Re-route';
+}
+
+function clearWaypointMarkers() {
+  waypointMarkers.forEach(m => map.removeLayer(m));
+  waypointMarkers = [];
+}
+
+function addDragHandle(latlng, idx) {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;background:white;border:3px solid #8b5cf6;
+           border-radius:50%;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,0.2)"></div>`,
+    iconAnchor: [7, 7],
+  });
+  const m = L.marker(latlng, { icon, draggable: true, zIndexOffset: 500 }).addTo(map);
+  m.on('drag', async () => {
+    // Re-fetch route through new waypoint position
+    const allWps = buildWaypointsWithExtra();
+    try {
+      const newCoords = await fetchRoute(allWps);
+      if (routeLayer._shadow) map.removeLayer(routeLayer._shadow);
+      map.removeLayer(routeLayer);
+      clearWaypointMarkers();
+      drawRoute(newCoords);
+    } catch(e) { /* silent on drag */ }
+  });
+  waypointMarkers.push(m);
+  return m;
+}
+
+function buildWaypointsWithExtra() {
+  const wps = [routePins.from.latlng];
+  // include any extra dragged midpoints
+  waypointMarkers.forEach(m => wps.push(m.getLatLng()));
+  wps.push(routePins.to.latlng);
+  return wps.map(p => ({ lat: p.lat, lng: p.lng }));
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — CALCULATE
+// ══════════════════════════════════════════════
+async function calcRoute() {
+  const status = document.getElementById('route-status');
+  status.textContent = '⏳ Routing…';
+  document.getElementById('btn-go').disabled = true;
+
+  try {
+    // Resolve from/to — use pin if available, else geocode address
+    if (!routePins.from || document.getElementById('addr-from').dataset.fromPin !== 'true') {
+      const val = document.getElementById('addr-from').value.trim();
+      if (!val) throw new Error('Please enter a start address or drop a pin');
+      const loc = await geocode(val);
+      placePin('from', L.latLng(loc.lat, loc.lng), null);
+    }
+    if (!routePins.to || document.getElementById('addr-to').dataset.fromPin !== 'true') {
+      const val = document.getElementById('addr-to').value.trim();
+      if (!val) throw new Error('Please enter an end address or drop a pin');
+      const loc = await geocode(val);
+      placePin('to', L.latLng(loc.lat, loc.lng), null);
+    }
+
+    const wps = [
+      { lat: routePins.from.latlng.lat, lng: routePins.from.latlng.lng },
+      { lat: routePins.to.latlng.lat,   lng: routePins.to.latlng.lng   },
+    ];
+
+    const latlngs = await fetchRoute(wps);
+    drawRoute(latlngs);
+    status.textContent = '✅ Drag the purple handles to adjust';
+
+  } catch(e) {
+    status.textContent = '⚠️ ' + e.message;
+  }
+
+  document.getElementById('btn-go').disabled = false;
+}
+
+// ══════════════════════════════════════════════
+//  ROUTE — CONFIRM (mark streets as walked)
+// ══════════════════════════════════════════════
+function confirmRoute() {
+  if (!routeWaypoints.length) return;
+
+  let marked = 0;
+  streets.forEach(street => {
+    if (walkedSet.has(street.id)) return;
+    if (routeIntersectsStreet(routeWaypoints, street.latlngs)) {
+      walkedSet.add(street.id);
+      styleLayer(street.id);
+      queueSave(street.id, true);
+      marked++;
+    }
+  });
+
+  updateStats();
+  document.getElementById('route-status').textContent = `🎉 Marked ${marked} streets as walked!`;
+  document.getElementById('btn-confirm-route').style.display = 'none';
+  setTimeout(clearRoute, 2500);
+}
+
+// Check if route passes close enough to a street segment
+function routeIntersectsStreet(routePts, streetPts) {
+  const THRESH = 0.00015; // ~15m in degrees
+  for (const rp of routePts) {
+    for (let i = 0; i < streetPts.length - 1; i++) {
+      if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < THRESH) return true;
+    }
+  }
+  return false;
+}
+
+function pointToSegmentDist([plat, plng], [alat, alng], [blat, blng]) {
+  const dx = blng - alng, dy = blat - alat;
+  const lenSq = dx*dx + dy*dy;
+  if (lenSq === 0) return Math.hypot(plng - alng, plat - alat);
+  let t = ((plng - alng)*dx + (plat - alat)*dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(plng - (alng + t*dx), plat - (alat + t*dy));
+}
+
+function clearRoute() {
+  if (routeLayer) {
+    if (routeLayer._shadow) map.removeLayer(routeLayer._shadow);
+    map.removeLayer(routeLayer);
+    routeLayer = null;
+  }
+  clearWaypointMarkers();
+  if (routePins.from?.marker) map.removeLayer(routePins.from.marker);
+  if (routePins.to?.marker)   map.removeLayer(routePins.to.marker);
+  routePins = { from: null, to: null };
+  routeWaypoints = [];
+  document.getElementById('addr-from').value = '';
+  document.getElementById('addr-to').value   = '';
+  document.getElementById('addr-from').classList.remove('has-pin');
+  document.getElementById('addr-to').classList.remove('has-pin');
+  document.getElementById('route-status').textContent = '';
+  document.getElementById('btn-confirm-route').style.display = 'none';
+  document.getElementById('btn-go').textContent = 'Get Route';
+  updateGoBtn();
+}
+
+// ══════════════════════════════════════════════
+//  GEO HELPERS
+// ══════════════════════════════════════════════
 function segmentMiles(pts) {
   let m = 0;
   const R = 6371000, r = Math.PI / 180;
@@ -338,43 +695,9 @@ function segmentMiles(pts) {
   return m / 1609.344;
 }
 
-// ── Tooltip ────────────────────────────────────────
-const tt = document.getElementById('tt');
-document.addEventListener('mousemove', e => {
-  tt.style.left = (e.clientX + 16) + 'px';
-  tt.style.top  = (e.clientY - 44) + 'px';
-});
-
-// ── Layer creation ─────────────────────────────────
-function addStreetLayer(street) {
-  const w = walkedSet.has(street.id);
-  const lyr = L.polyline(street.latlngs, {
-    color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2,
-    opacity: w ? 1 : 0.5, bubblingMouseEvents: false,
-  }).addTo(map);
-
-  lyr.on('click', () => {
-    const nowWalked = mode === 'walk';
-    if (nowWalked) walkedSet.add(street.id); else walkedSet.delete(street.id);
-    styleLayer(street.id);
-    updateStats();
-    queueSave(street.id, nowWalked);
-  });
-
-  lyr.on('mouseover', () => {
-    document.getElementById('tt-name').textContent = street.name;
-    document.getElementById('tt-info').textContent =
-      street.miles.toFixed(2) + ' mi  ·  ' + (walkedSet.has(street.id) ? '✓ Walked' : 'Not yet');
-    tt.style.display = 'block';
-    if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#0ea5e9', opacity: 0.9 });
-  });
-
-  lyr.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
-
-  layers[street.id] = lyr;
-}
-
-// ── Loading helpers ────────────────────────────────
+// ══════════════════════════════════════════════
+//  LOADING HELPERS
+// ══════════════════════════════════════════════
 function setLoadMsg(txt, pct) {
   document.getElementById('load-msg').textContent = txt;
   if (pct !== undefined) document.getElementById('load-bar').style.width = pct + '%';
@@ -387,22 +710,28 @@ function showError(html) {
   document.getElementById('err-detail').innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════
-//  MAIN
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  MAIN INIT
+// ══════════════════════════════════════════════
 async function init() {
-  // Init map
   map = L.map('map', { center: [37.7749, -122.4194], zoom: 14 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 19,
   }).addTo(map);
 
-  // Load walked data from Supabase
+  // Map click: place pin if waiting, else ignore
+  map.on('click', e => {
+    if (!pinTarget) return;
+    placePin(pinTarget, e.latlng, null);
+    pinTarget = null;
+    document.getElementById('pin-hint').style.display = 'none';
+    map.getContainer().style.cursor = '';
+  });
+
   setLoadMsg('Loading your progress from Supabase…', 8);
   try { await loadWalked(); }
-  catch(e) { showError('Could not load your data from Supabase.<br><br>Check that your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON</code> are correct in <code>index.html</code>.<br><br>Error: <code>' + e.message + '</code>'); return; }
+  catch(e) { showError('Could not connect to Supabase.<br><br>Check that <code>SUPABASE_URL</code> and <code>SUPABASE_ANON</code> are set correctly.<br><br>Error: <code>' + e.message + '</code>'); return; }
 
-  // Fetch streets from Overpass
   setLoadMsg('Fetching SF streets from OpenStreetMap (~20s)…', 15);
   let data;
   try {
@@ -415,14 +744,13 @@ async function init() {
     setLoadMsg('Downloading street geometry…', 45);
     data = await res.json();
   } catch(e) {
-    showError('Could not reach the OpenStreetMap API.<br><br>Error: <code>' + e.message + '</code>');
+    showError('Could not reach OpenStreetMap API.<br><br>Error: <code>' + e.message + '</code>');
     return;
   }
 
   const ways = data.elements.filter(e => e.type === 'way' && e.geometry?.length >= 2 && e.tags?.name);
   setLoadMsg('Rendering ' + ways.length + ' streets…', 62);
 
-  // Batch render to keep UI responsive
   let i = 0;
   function renderChunk() {
     const end = Math.min(i + 400, ways.length);
@@ -430,17 +758,14 @@ async function init() {
       const el = ways[i];
       const id = String(el.id);
       const latlngs = el.geometry.map(p => [p.lat, p.lon]);
-      const street = { id, name: el.tags.name, miles: segmentMiles(latlngs), latlngs };
-      streets.push(street);
-      addStreetLayer(street);
+      streets.push({ id, name: el.tags.name, miles: segmentMiles(latlngs), latlngs });
+      addStreetLayer(streets[streets.length - 1]);
     }
     document.getElementById('load-bar').style.width = (62 + Math.round(i / ways.length * 36)) + '%';
     if (i < ways.length) { requestAnimationFrame(renderChunk); return; }
-
     updateStats();
     document.getElementById('loading').style.display = 'none';
-    syncDot('ok');
-    setTimeout(() => syncDot(''), 2000);
+    syncDot('ok'); setTimeout(() => syncDot(''), 2000);
   }
   requestAnimationFrame(renderChunk);
 }
