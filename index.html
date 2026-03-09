@@ -208,7 +208,7 @@ out body geom;`;
 // ══════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // Single shared user — all visitors see and edit the same walked streets
 const UID = 'shared';
@@ -261,7 +261,7 @@ function styleLayer(id) {
 
 // ── Supabase: load walked streets ──────────────────
 async function loadWalked() {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('walked_streets')
     .select('way_id')
     .eq('uid', UID);
@@ -286,11 +286,11 @@ async function flushSave() {
 
   try {
     if (toInsert.length) {
-      const { error } = await supabase.from('walked_streets').upsert(toInsert, { onConflict: 'uid,way_id' });
+      const { error } = await db.from('walked_streets').upsert(toInsert, { onConflict: 'uid,way_id' });
       if (error) throw error;
     }
     if (toDelete.length) {
-      const { error } = await supabase.from('walked_streets').delete().eq('uid', UID).in('way_id', toDelete);
+      const { error } = await db.from('walked_streets').delete().eq('uid', UID).in('way_id', toDelete);
       if (error) throw error;
     }
     syncDot('ok');
@@ -305,7 +305,7 @@ async function flushSave() {
 async function resetAll() {
   if (!confirm('Clear ALL walked streets from your account? This cannot be undone.')) return;
   syncDot('syncing');
-  const { error } = await supabase.from('walked_streets').delete().eq('uid', UID);
+  const { error } = await db.from('walked_streets').delete().eq('uid', UID);
   if (error) { syncDot('err'); return; }
   walkedSet.clear();
   streets.forEach(s => styleLayer(s.id));
