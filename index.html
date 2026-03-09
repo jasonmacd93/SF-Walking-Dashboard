@@ -7,161 +7,171 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  /* ── REPLACE THESE TWO VALUES ── */
-  /* See README for how to find them in your Supabase project */
-
   :root {
-    --bg: #0d0d0d;
-    --panel: #141414;
-    --border: #2a2a2a;
-    --gold: #d4a853;
-    --gold-dim: #7a5820;
-    --green: #5adf8a;
-    --text: #e8e3dc;
-    --muted: #666;
-    --unwalked: #2d3d4d;
+    --sky: #e8f4fd;
+    --white: #ffffff;
+    --panel: #ffffff;
+    --border: #e2e8f0;
+    --teal: #0ea5e9;
+    --teal-dark: #0284c7;
+    --coral: #f97316;
+    --coral-dark: #ea6c0a;
+    --mint: #10b981;
+    --mint-dark: #059669;
+    --red: #ef4444;
+    --text: #1e293b;
+    --muted: #94a3b8;
+    --walked-color: #f97316;
+    --unwalked-color: #cbd5e1;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
-  body { font-family: 'Space Mono', monospace; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+  body { font-family: 'Nunito Sans', sans-serif; background: var(--sky); color: var(--text); display: flex; flex-direction: column; }
 
   /* HEADER */
   #header {
-    display: flex; align-items: center; height: 56px;
-    background: var(--panel); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; height: 62px;
+    background: var(--white); border-bottom: 2px solid var(--border);
     flex-shrink: 0; overflow: hidden;
+    box-shadow: var(--shadow);
+    z-index: 100;
   }
 
   #logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
-    letter-spacing: 4px; color: var(--gold); padding: 0 20px;
-    border-right: 1px solid var(--border); height: 100%;
-    display: flex; align-items: center; white-space: nowrap;
-    text-shadow: 0 0 28px rgba(212,168,83,0.4);
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.3rem;
+    letter-spacing: -0.5px; padding: 0 22px;
+    border-right: 2px solid var(--border); height: 100%;
+    display: flex; align-items: center; white-space: nowrap; gap: 8px;
+    color: var(--teal-dark);
   }
+  #logo .logo-icon { font-size: 1.4rem; }
 
   #stats { display: flex; flex: 1; height: 100%; }
 
   .stat-block {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    border-right: 1px solid var(--border); padding: 6px 12px;
+    border-right: 2px solid var(--border); padding: 6px 14px;
   }
-  .stat-label { font-size: 0.52rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-  .stat-val { font-size: 1.05rem; font-weight: 700; }
-  .stat-val.g { color: var(--green); }
-  .stat-val.o { color: var(--gold); }
+  .stat-label { font-size: 0.58rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
+  .stat-val { font-family: 'Nunito', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text); }
+  .stat-val.g { color: var(--mint); }
+  .stat-val.o { color: var(--coral); }
 
-  #progress-wrap { width: 90%; height: 3px; background: #222; border-radius: 2px; margin-top: 3px; overflow: hidden; }
-  #progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); width: 0%; transition: width 0.4s ease; }
+  #progress-wrap { width: 88%; height: 6px; background: var(--border); border-radius: 99px; margin-top: 4px; overflow: hidden; }
+  #progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); width: 0%; transition: width 0.5s cubic-bezier(.4,0,.2,1); border-radius: 99px; }
 
   #toolbar { display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 100%; }
 
   .btn {
-    font-family: 'Space Mono', monospace; font-size: 0.6rem;
-    letter-spacing: 1px; text-transform: uppercase; padding: 6px 12px;
-    border: 1px solid var(--gold-dim); background: transparent;
-    color: var(--gold); cursor: pointer; border-radius: 2px;
-    transition: all 0.12s; white-space: nowrap;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.72rem;
+    letter-spacing: 0.3px; padding: 7px 14px;
+    border: 2px solid transparent; background: var(--border);
+    color: var(--text); cursor: pointer; border-radius: 99px;
+    transition: all 0.15s; white-space: nowrap;
   }
-  .btn:hover, .btn.active { background: var(--gold); color: #0d0d0d; border-color: var(--gold); }
-  .btn.red { border-color: #5a2020; color: #f87171; }
-  .btn.red:hover { background: #f87171; color: #0d0d0d; border-color: #f87171; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+  .btn.active.walk-btn { background: var(--mint); color: white; border-color: var(--mint-dark); }
+  .btn.active.unwalk-btn { background: var(--coral); color: white; border-color: var(--coral-dark); }
+  .btn.red { background: #fee2e2; color: var(--red); border-color: #fecaca; }
+  .btn.red:hover { background: var(--red); color: white; }
 
   /* SYNC INDICATOR */
   #sync-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--muted); transition: background 0.3s;
-    flex-shrink: 0;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); transition: background 0.3s; flex-shrink: 0;
   }
-  #sync-dot.syncing { background: var(--gold); animation: pulse 0.8s infinite; }
-  #sync-dot.ok { background: var(--green); }
-  #sync-dot.err { background: #f87171; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  #sync-dot.syncing { background: var(--teal); animation: pulse 0.8s infinite; }
+  #sync-dot.ok { background: var(--mint); }
+  #sync-dot.err { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
 
   /* MAP */
   #map-wrap { flex: 1; position: relative; overflow: hidden; }
   #map { width: 100%; height: 100%; }
-  .leaflet-tile { filter: grayscale(100%) brightness(0.30) contrast(1.5); }
 
   /* LOADING */
   #loading {
-    position: absolute; inset: 0; background: rgba(8,8,8,0.96);
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #e0f2fe 0%, #ecfdf5 100%);
     z-index: 9999; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 18px;
+    align-items: center; justify-content: center; gap: 20px;
   }
-  #loading h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 6px; color: var(--gold); }
-  #load-msg { font-size: 0.64rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; max-width: 360px; text-align: center; line-height: 2; }
-  .ring { width: 44px; height: 44px; border: 3px solid #222; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.75s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #load-bar-wrap { width: 260px; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
-  #load-bar { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); width: 0%; transition: width 0.3s ease; }
+  #loading .load-emoji { font-size: 3.5rem; animation: bounce 1s ease-in-out infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  #loading h2 { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 2rem; color: var(--teal-dark); letter-spacing: -1px; }
+  #load-msg { font-size: 0.75rem; font-weight: 600; color: var(--muted); max-width: 340px; text-align: center; line-height: 1.8; }
+  #load-bar-wrap { width: 260px; height: 8px; background: white; border-radius: 99px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+  #load-bar { height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); width: 0%; transition: width 0.3s ease; border-radius: 99px; }
 
   /* LEGEND */
   #legend {
     position: absolute; bottom: 28px; right: 10px;
-    background: rgba(12,12,12,0.94); border: 1px solid var(--border);
-    padding: 12px 16px; z-index: 1000; font-size: 0.65rem;
-    border-radius: 3px; backdrop-filter: blur(6px);
+    background: white; border: 2px solid var(--border);
+    padding: 12px 16px; z-index: 1000; font-size: 0.68rem;
+    border-radius: 14px; box-shadow: var(--shadow);
   }
-  .leg-title { color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 9px; }
-  .leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
-  .leg-line { width: 22px; height: 3px; border-radius: 1px; }
-  .leg-hint { color: var(--muted); margin-top: 8px; font-size: 0.6rem; }
+  .leg-title { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text); letter-spacing: 0; text-transform: none; margin-bottom: 9px; font-size: 0.75rem; }
+  .leg-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; font-weight: 600; color: var(--text); }
+  .leg-line { width: 22px; height: 4px; border-radius: 99px; }
+  .leg-hint { color: var(--muted); margin-top: 8px; font-size: 0.62rem; }
 
   /* TOOLTIP */
   #tt {
-    position: fixed; background: rgba(12,12,12,0.97);
-    border: 1px solid var(--gold-dim); padding: 8px 12px;
-    font-size: 0.7rem; z-index: 5000; pointer-events: none;
-    border-radius: 3px; display: none; max-width: 220px;
+    position: fixed; background: white;
+    border: 2px solid var(--border); padding: 9px 13px;
+    font-size: 0.72rem; z-index: 5000; pointer-events: none;
+    border-radius: 12px; display: none; max-width: 220px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   }
-  #tt-name { font-weight: 700; color: var(--gold); margin-bottom: 3px; font-size: 0.82rem; }
-  #tt-info { color: var(--muted); }
+  #tt-name { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--teal-dark); margin-bottom: 3px; font-size: 0.85rem; }
+  #tt-info { color: var(--muted); font-weight: 600; }
 
   /* ERROR */
   #error-box {
     display: none; position: absolute; inset: 0;
-    background: rgba(8,8,8,0.97); z-index: 9999;
-    flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; text-align: center; padding: 40px;
+    background: linear-gradient(135deg, #fff1f2, #fef3c7);
+    z-index: 9999; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; text-align: center; padding: 40px;
   }
-  #error-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #f87171; letter-spacing: 4px; }
-  #error-box p { color: var(--muted); font-size: 0.72rem; line-height: 2.2; max-width: 460px; }
-  #error-box code { color: var(--text); background: #1e1e1e; padding: 3px 8px; border-radius: 3px; }
+  #error-box .err-emoji { font-size: 3rem; }
+  #error-box h2 { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.8rem; color: var(--red); }
+  #error-box p { color: #64748b; font-size: 0.78rem; line-height: 2; max-width: 460px; font-weight: 600; }
+  #error-box code { color: var(--text); background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); }
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div id="logo">SF&nbsp;Walker</div>
+  <div id="logo"><span class="logo-icon">🥾</span> SF Walker</div>
   <div id="stats">
     <div class="stat-block">
-      <div class="stat-label">Walked</div>
+      <div class="stat-label">🟢 Walked</div>
       <div class="stat-val g" id="s-walked">0.0 mi</div>
     </div>
     <div class="stat-block">
-      <div class="stat-label">Remaining</div>
+      <div class="stat-label">🗺️ Remaining</div>
       <div class="stat-val" id="s-remain">— mi</div>
     </div>
     <div class="stat-block" style="flex:1.4">
-      <div class="stat-label">Progress</div>
+      <div class="stat-label">⚡ Progress</div>
       <div class="stat-val o" id="s-pct">0.0%</div>
       <div id="progress-wrap"><div id="progress-fill"></div></div>
     </div>
     <div class="stat-block">
-      <div class="stat-label">Streets Done</div>
+      <div class="stat-label">🏁 Streets Done</div>
       <div class="stat-val" id="s-count">0 / —</div>
     </div>
   </div>
   <div id="toolbar">
     <div id="sync-dot" title="Sync status"></div>
-    <button class="btn active" id="btn-walk" onclick="setMode('walk')">✓ Mark Walked</button>
-    <button class="btn" id="btn-unwalk" onclick="setMode('unwalk')">✗ Unmark</button>
-    <button class="btn red" onclick="resetAll()">Reset All</button>
+    <button class="btn walk-btn active" id="btn-walk" onclick="setMode('walk')">✅ Mark Walked</button>
+    <button class="btn unwalk-btn" id="btn-unwalk" onclick="setMode('unwalk')">↩️ Unmark</button>
+    <button class="btn red" onclick="resetAll()">🗑️ Reset</button>
   </div>
 </div>
 
@@ -169,22 +179,23 @@
   <div id="map"></div>
 
   <div id="loading">
-    <div class="ring"></div>
+    <div class="load-emoji">🥾</div>
     <h2>SF Street Walker</h2>
     <div id="load-bar-wrap"><div id="load-bar"></div></div>
     <div id="load-msg">Starting up…</div>
   </div>
 
   <div id="error-box">
+    <div class="err-emoji">😬</div>
     <h2>Something Went Wrong</h2>
     <p id="err-detail"></p>
-    <button class="btn" onclick="location.reload()">↺ Try Again</button>
+    <button class="btn walk-btn active" onclick="location.reload()">↺ Try Again</button>
   </div>
 
   <div id="legend">
     <div class="leg-title">Streets</div>
-    <div class="leg-row"><div class="leg-line" style="background:var(--green)"></div>Walked</div>
-    <div class="leg-row"><div class="leg-line" style="background:var(--unwalked)"></div>Not walked</div>
+    <div class="leg-row"><div class="leg-line" style="background:#f97316"></div>Walked 🎉</div>
+    <div class="leg-row"><div class="leg-line" style="background:#cbd5e1"></div>Not yet</div>
     <div class="leg-hint">Click any street to toggle</div>
   </div>
 
@@ -255,7 +266,7 @@ function styleLayer(id) {
   const lyr = layers[id];
   if (!lyr) return;
   const w = walkedSet.has(id);
-  lyr.setStyle({ color: w ? '#5adf8a' : '#2d3d4d', weight: w ? 3.5 : 1.8, opacity: w ? 1 : 0.65 });
+  lyr.setStyle({ color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2, opacity: w ? 1 : 0.5 });
   if (w) lyr.bringToFront();
 }
 
@@ -338,8 +349,8 @@ document.addEventListener('mousemove', e => {
 function addStreetLayer(street) {
   const w = walkedSet.has(street.id);
   const lyr = L.polyline(street.latlngs, {
-    color: w ? '#5adf8a' : '#2d3d4d', weight: w ? 3.5 : 1.8,
-    opacity: w ? 1 : 0.65, bubblingMouseEvents: false,
+    color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2,
+    opacity: w ? 1 : 0.5, bubblingMouseEvents: false,
   }).addTo(map);
 
   lyr.on('click', () => {
@@ -355,7 +366,7 @@ function addStreetLayer(street) {
     document.getElementById('tt-info').textContent =
       street.miles.toFixed(2) + ' mi  ·  ' + (walkedSet.has(street.id) ? '✓ Walked' : 'Not yet');
     tt.style.display = 'block';
-    if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#7aaac8', opacity: 0.9 });
+    if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#0ea5e9', opacity: 0.9 });
   });
 
   lyr.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
