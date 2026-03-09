@@ -639,22 +639,17 @@ function confirmRoute() {
   setTimeout(clearRoute, 2500);
 }
 
-// Check if the route actually TRAVELS ALONG a street.
-// Uses two criteria - whichever is easier to satisfy for short vs long streets:
-// 1. A run of MIN_ALONG consecutive close route points, OR
-// 2. Enough close points to cover at least 40% of the street's length
+// Check if the route actually TRAVELS ALONG a street (not just crosses it).
+// Requires a run of consecutive route points all close to the street —
+// a crossing street only satisfies this for 1-2 points, not a sustained run.
 function routeIntersectsStreet(routePts, streetPts) {
-  const CLOSE     = 0.00013; // ~13m
-  const MIN_ALONG = 5;       // consecutive points for long streets
-  const STREET_LEN = streetPts.length;
-  const MIN_COVERAGE = Math.max(2, Math.floor(STREET_LEN * 0.4)); // 40% of street covered
+  const CLOSE     = 0.00014; // ~14m
+  const MIN_ALONG = 4;       // 4 consecutive points = ~20-40m of sustained travel
 
   let consecutive = 0;
-  let totalClose  = 0;
-
   for (const rp of routePts) {
     let onStreet = false;
-    for (let i = 0; i < STREET_LEN - 1; i++) {
+    for (let i = 0; i < streetPts.length - 1; i++) {
       if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < CLOSE) {
         onStreet = true;
         break;
@@ -662,15 +657,12 @@ function routeIntersectsStreet(routePts, streetPts) {
     }
     if (onStreet) {
       consecutive++;
-      totalClose++;
       if (consecutive >= MIN_ALONG) return true;
     } else {
       consecutive = 0;
     }
   }
-
-  // Short street fallback: if enough total route points were close, count it
-  return totalClose >= MIN_COVERAGE && totalClose >= 2;
+  return false;
 }
 
 function pointToSegmentDist([plat, plng], [alat, alng], [blat, blng]) {
