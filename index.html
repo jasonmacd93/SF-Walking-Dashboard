@@ -640,27 +640,25 @@ function confirmRoute() {
 }
 
 // Check if the route actually TRAVELS ALONG a street (not just crosses it).
-// Requires a run of consecutive route points all close to the street —
-// a crossing street only satisfies this for 1-2 points, not a sustained run.
+// Allows a 1-point gap in the consecutive run to handle slight OSM/OSRM offsets.
 function routeIntersectsStreet(routePts, streetPts) {
-  const CLOSE     = 0.00014; // ~14m
-  const MIN_ALONG = 4;       // 4 consecutive points = ~20-40m of sustained travel
+  const CLOSE     = 0.00015; // ~15m
+  const MIN_ALONG = 4;       // need 4 close points within a window of 6
+  const WINDOW    = 6;       // sliding window size
 
-  let consecutive = 0;
-  for (const rp of routePts) {
-    let onStreet = false;
+  // Precompute which route points are close to this street
+  const close = routePts.map(rp => {
     for (let i = 0; i < streetPts.length - 1; i++) {
-      if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < CLOSE) {
-        onStreet = true;
-        break;
-      }
+      if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < CLOSE) return true;
     }
-    if (onStreet) {
-      consecutive++;
-      if (consecutive >= MIN_ALONG) return true;
-    } else {
-      consecutive = 0;
-    }
+    return false;
+  });
+
+  // Slide a window: if MIN_ALONG out of WINDOW points are close, it's a match
+  for (let i = 0; i <= close.length - WINDOW; i++) {
+    let count = 0;
+    for (let j = i; j < i + WINDOW; j++) if (close[j]) count++;
+    if (count >= MIN_ALONG) return true;
   }
   return false;
 }
