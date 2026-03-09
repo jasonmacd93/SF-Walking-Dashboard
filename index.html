@@ -355,7 +355,7 @@ function styleLayer(id) {
   const lyr = layers[id];
   if (!lyr) return;
   const w = walkedSet.has(id);
-  lyr.setStyle({ color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2, opacity: w ? 1 : 0.5 });
+  lyr.setStyle({ color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2, opacity: w ? 1 : 0.5, interactive: false });
   if (w) lyr.bringToFront();
 }
 
@@ -380,13 +380,20 @@ document.addEventListener('mousemove', e => {
 
 function addStreetLayer(street) {
   const w = walkedSet.has(street.id);
-  const lyr = L.polyline(street.latlngs, {
-    color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2,
-    opacity: w ? 1 : 0.5, bubblingMouseEvents: false,
+
+  // Wide invisible hit target for easy clicking
+  const hitLayer = L.polyline(street.latlngs, {
+    color: 'transparent', weight: 20, opacity: 0, bubblingMouseEvents: false,
   }).addTo(map);
 
-  lyr.on('click', () => {
-    if (pinTarget) return; // ignore clicks when placing pins
+  // Visible line
+  const lyr = L.polyline(street.latlngs, {
+    color: w ? '#f97316' : '#94a3b8', weight: w ? 4 : 2,
+    opacity: w ? 1 : 0.5, bubblingMouseEvents: false, interactive: false,
+  }).addTo(map);
+
+  hitLayer.on('click', () => {
+    if (pinTarget) return;
     const nowWalked = mode === 'walk';
     if (nowWalked) walkedSet.add(street.id); else walkedSet.delete(street.id);
     styleLayer(street.id);
@@ -394,7 +401,7 @@ function addStreetLayer(street) {
     queueSave(street.id, nowWalked);
   });
 
-  lyr.on('mouseover', () => {
+  hitLayer.on('mouseover', () => {
     if (pinTarget) return;
     document.getElementById('tt-name').textContent = street.name;
     document.getElementById('tt-info').textContent =
@@ -403,8 +410,10 @@ function addStreetLayer(street) {
     if (!walkedSet.has(street.id)) lyr.setStyle({ color: '#0ea5e9', opacity: 0.9 });
   });
 
-  lyr.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
+  hitLayer.on('mouseout', () => { tt.style.display = 'none'; styleLayer(street.id); });
+
   layers[street.id] = lyr;
+  street._hitLayer = hitLayer;
 }
 
 // ══════════════════════════════════════════════
