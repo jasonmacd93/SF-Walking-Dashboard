@@ -639,12 +639,27 @@ function confirmRoute() {
   setTimeout(clearRoute, 2500);
 }
 
-// Check if route passes close enough to a street segment
+// Check if the route actually TRAVELS ALONG a street (not just crosses it).
+// We require multiple consecutive route points to be close to the street,
+// meaning the route is following it — not just crossing perpendicularly.
 function routeIntersectsStreet(routePts, streetPts) {
-  const THRESH = 0.00015; // ~15m in degrees
+  const CLOSE  = 0.00012; // ~12m — point must be this close to street
+  const MIN_ALONG = 3;    // need at least this many consecutive close points
+
+  let consecutive = 0;
   for (const rp of routePts) {
+    let onStreet = false;
     for (let i = 0; i < streetPts.length - 1; i++) {
-      if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < THRESH) return true;
+      if (pointToSegmentDist(rp, streetPts[i], streetPts[i+1]) < CLOSE) {
+        onStreet = true;
+        break;
+      }
+    }
+    if (onStreet) {
+      consecutive++;
+      if (consecutive >= MIN_ALONG) return true;
+    } else {
+      consecutive = 0;
     }
   }
   return false;
